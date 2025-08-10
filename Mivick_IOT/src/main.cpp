@@ -34,25 +34,35 @@ NimBLEServer* pServer = nullptr;
 NimBLECharacteristic* pCharacteristic = nullptr;
 
 class MyCallbacks : public NimBLECharacteristicCallbacks {
-  void onWrite(NimBLECharacteristic* pCharacteristic) override {
-    std::string value = pCharacteristic->getValue();
+void onWrite(NimBLECharacteristic* pCharacteristic) override {
+  std::string value = pCharacteristic->getValue();
 
-    if (value == "ON") {
-      if (!sistemaAtivo) {
-        sistemaAtivo = true;
-        ligarFuncoes();
-        pCharacteristic->setValue("Sistema ativado");
-        pCharacteristic->notify();
-      }
-    } else if (value == "OFF") {
-      if (sistemaAtivo) {
-        sistemaAtivo = false;
-        desligarFuncoes();
-        pCharacteristic->setValue("Sistema desativado");
-        pCharacteristic->notify();
-      }
+  // Remover caracteres de controle (ex: \n, \r)
+  value.erase(std::remove(value.begin(), value.end(), '\n'), value.end());
+  value.erase(std::remove(value.begin(), value.end(), '\r'), value.end());
+
+  Serial.printf("Valor recebido via BLE: %s\n", value.c_str());
+
+  if (value == "ON") {
+    if (!sistemaAtivo) {
+      sistemaAtivo = true;
+      ligarFuncoes();
+      pCharacteristic->setValue("Sistema ativado");
+      pCharacteristic->notify();
     }
+  } else if (value == "OFF") {
+    if (sistemaAtivo) {
+      sistemaAtivo = false;
+      desligarFuncoes();
+      pCharacteristic->setValue("Sistema desativado");
+      pCharacteristic->notify();
+    }
+  } else {
+    Serial.println("Comando desconhecido");
   }
+}
+
+  
 };
 
 void iniciarCamera() {
