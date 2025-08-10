@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Button, Text, PermissionsAndroid, Platform } from 'react-native';
 import { BleManager, Device } from 'react-native-ble-plx';
-import base64 from 'react-native-base64';
+import { Buffer } from 'buffer';
 
 const SERVICE_UUID = "12345678-1234-1234-1234-123456789abc";
 const CHARACTERISTIC_UUID = "abcdefab-1234-1234-1234-abcdefabcdef";
@@ -9,8 +9,11 @@ const DEVICE_NAME = "ESP32-CAM-BLE";
 
 export default function App() {
   const [manager] = useState(() => new BleManager());
-  const [device, setDevice] = useState<Device | null>(null); // tipado
+  const [device, setDevice] = useState<Device | null>(null);
   const [connected, setConnected] = useState(false);
+
+  // Garante que Buffer esteja disponível globalmente
+  global.Buffer = global.Buffer || Buffer;
 
   useEffect(() => {
     async function startScan() {
@@ -61,7 +64,7 @@ export default function App() {
       await device.writeCharacteristicWithResponseForService(
         SERVICE_UUID,
         CHARACTERISTIC_UUID,
-        base64.encode(cmd + "\n")
+        Buffer.from(cmd + "\n", "utf-8").toString("base64")
       );
       console.log("Comando enviado:", cmd);
     } catch (e) {

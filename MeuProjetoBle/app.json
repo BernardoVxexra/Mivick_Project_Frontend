@@ -26,16 +26,27 @@
     },
     "plugins": [
       "expo-router",
+      "expo-dev-client",
       [
+         "react-native-ble-plx",
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#ffffff",
+          "isBackgroundEnabled": true
         }
       ]
     ],
+
+      "android": {
+      "permissions": [
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_CONNECT",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
     "experiments": {
       "typedRoutes": true
     }
