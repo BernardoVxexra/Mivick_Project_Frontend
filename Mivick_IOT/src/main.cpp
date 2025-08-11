@@ -1,12 +1,9 @@
 #include <NimBLEDevice.h>
 #include "esp_camera.h"
 #include "WiFi.h"
+#include <algorithm> // Para std::remove
 
 bool sistemaAtivo = false;
-
-// Protótipos
-void ligarFuncoes();
-void desligarFuncoes();
 
 // ==== Configuração da câmera (ajuste para seu modelo) ====
 #define PWDN_GPIO_NUM    -1
@@ -32,38 +29,6 @@ void desligarFuncoes();
 
 NimBLEServer* pServer = nullptr;
 NimBLECharacteristic* pCharacteristic = nullptr;
-
-class MyCallbacks : public NimBLECharacteristicCallbacks {
-void onWrite(NimBLECharacteristic* pCharacteristic) override {
-  std::string value = pCharacteristic->getValue();
-
-  // Remover caracteres de controle (ex: \n, \r)
-  value.erase(std::remove(value.begin(), value.end(), '\n'), value.end());
-  value.erase(std::remove(value.begin(), value.end(), '\r'), value.end());
-
-  Serial.printf("Valor recebido via BLE: %s\n", value.c_str());
-
-  if (value == "ON") {
-    if (!sistemaAtivo) {
-      sistemaAtivo = true;
-      ligarFuncoes();
-      pCharacteristic->setValue("Sistema ativado");
-      pCharacteristic->notify();
-    }
-  } else if (value == "OFF") {
-    if (sistemaAtivo) {
-      sistemaAtivo = false;
-      desligarFuncoes();
-      pCharacteristic->setValue("Sistema desativado");
-      pCharacteristic->notify();
-    }
-  } else {
-    Serial.println("Comando desconhecido");
-  }
-}
-
-  
-};
 
 void iniciarCamera() {
   camera_config_t config;
@@ -96,22 +61,52 @@ void iniciarCamera() {
 }
 
 void ligarFuncoes() {
-  Serial.println("Ligando sensores, camera, wifi...");
+  Serial.println("✅ Ligando sensores, camera, wifi...");
   iniciarCamera();
   WiFi.begin("SSID","SENHA");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\nWiFi conectado");
+  Serial.println("\n📡 WiFi conectado");
 }
 
 void desligarFuncoes() {
-  Serial.println("Desligando tudo...");
+  Serial.println("🛑 Desligando tudo...");
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
-  // desligar sensores etc
 }
+
+// ======== CALLBACKS ========
+class MyCallbacks : public NimBLECharacteristicCallbacks {
+  void onWrite(NimBLECharacteristic* pCharacteristic) override {
+    std::string value = pCharacteristic->getValue();
+
+    // Limpa \n e \r
+    value.erase(std::remove(value.begin(), value.end(), '\n'), value.end());
+    value.erase(std::remove(value.begin(), value.end(), '\r'), value.end());
+
+    Serial.printf("📩 Valor recebido via BLE: %s\n", value.c_str());
+
+    if (value == "ON") {
+      if (!sistemaAtivo) {
+        sistemaAtivo = true;
+        ligarFuncoes();
+        pCharacteristic->setValue("Sistema ativado");
+        pCharacteristic->notify();
+      }
+    } else if (value == "OFF") {
+      if (sistemaAtivo) {
+        sistemaAtivo = false;
+        desligarFuncoes();
+        pCharacteristic->setValue("Sistema desativado");
+        pCharacteristic->notify();
+      }
+    } else {
+      Serial.println("⚠️ Comando desconhecido");
+    }
+  }
+};
 
 void setup() {
   Serial.begin(115200);
@@ -119,7 +114,6 @@ void setup() {
   NimBLEDevice::init("ESP32-CAM-BLE");
 
   pServer = NimBLEDevice::createServer();
-
   NimBLEService* pService = pServer->createService(SERVICE_UUID);
 
   pCharacteristic = pService->createCharacteristic(
@@ -130,16 +124,15 @@ void setup() {
                     );
 
   pCharacteristic->setCallbacks(new MyCallbacks());
-
   pService->start();
 
   NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->start();
 
-  Serial.println("Aguardando comandos via BLE...");
+  Serial.println("🚀 Aguardando comandos via BLE...");
 }
 
 void loop() {
-  // Outras tarefas aqui
+  // Outras tarefas
 }
