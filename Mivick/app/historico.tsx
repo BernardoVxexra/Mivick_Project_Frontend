@@ -2,11 +2,15 @@ import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 
 export default function Historico({ route }: any) {
-  const { image } = route.params;
+  const image = route?.params?.image ?? '';
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: image }} style={styles.card} resizeMode="contain" />
+      {image ? (
+        <Image source={{ uri: image }} style={styles.card} resizeMode="contain" />
+      ) : (
+        <View style={styles.card} />
+      )}
     </View>
   );
 }
