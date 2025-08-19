@@ -1,42 +1,52 @@
+#include <Wire.h>
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
 #include <Arduino.h>
 
-#define TRIG_PIN 21
-#define ECHO_PIN 19
+Adafruit_MPU6050 mpu;
+
+#define MPU_SDA 2
+#define MPU_SCL 3
 
 void setup() {
   Serial.begin(115200);
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
+  Wire.begin(MPU_SDA, MPU_SCL);  // Define os pinos I2C
 
-  Serial.println("Sensor ultrassônico inicializado. Lendo distância...");
+  while (!Serial)
+    delay(10);
+
+  Serial.println("Iniciando MPU6050...");
+
+  if (!mpu.begin()) {
+    Serial.println("Falha ao encontrar MPU6050! Verifique conexões.");
+    while (1)
+      delay(10);
+  }
+
+  Serial.println("MPU6050 pronto!");
+  mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
+  mpu.setGyroRange(MPU6050_RANGE_500_DEG);
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+
+  delay(100);
 }
 
+
 void loop() {
-  // Gera pulso de trigger
-  digitalWrite(TRIG_PIN, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
+  /* Lê sensores do MPU6050 */
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
 
-  // Lê duração do pulso no echo
-  long duration = pulseIn(ECHO_PIN, HIGH, 30000); // timeout 30ms
-  float distance_cm;
+  Serial.print("Acelerômetro X: "); Serial.print(a.acceleration.x); Serial.print(" m/s² ");
+  Serial.print("Y: "); Serial.print(a.acceleration.y); Serial.print(" m/s² ");
+  Serial.print("Z: "); Serial.println(a.acceleration.z); Serial.print(" m/s² ");
 
-  if (duration == 0) {
-    distance_cm = -1; // sem retorno
-  } else {
-    // velocidade do som ~ 343 m/s
-    distance_cm = (duration / 2.0) * 0.0343;
-  }
+  Serial.print("Giroscópio X: "); Serial.print(g.gyro.x); Serial.print(" rad/s ");
+  Serial.print("Y: "); Serial.print(g.gyro.y); Serial.print(" rad/s ");
+  Serial.print("Z: "); Serial.println(g.gyro.z); Serial.print(" rad/s ");
 
-  if (distance_cm < 0) {
-    Serial.println("Nenhum obstáculo detectado");
-  } else {
-    Serial.print("Distância: ");
-    Serial.print(distance_cm, 2);
-    Serial.println(" cm");
-  }
+  Serial.print("Temperatura: "); Serial.print(temp.temperature); Serial.println(" °C");
 
-  delay(200);
+  Serial.println("---------------------------------");
+  delay(500);
 }
