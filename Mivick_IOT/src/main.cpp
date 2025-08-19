@@ -1,55 +1,28 @@
 #include <NimBLEDevice.h>
-#include "esp_camera.h"
+#include <Arduino.h>
 
 #define SERVICE_UUID        "12345678-1234-1234-1234-123456789abc"
 #define CHARACTERISTIC_UUID "abcdefab-1234-1234-1234-abcdefabcdef"
 
-// Pinos da câmera do ESP32-S3-CAM
-#define PWDN_GPIO_NUM     -1
-#define RESET_GPIO_NUM    -1
-#define XCLK_GPIO_NUM     10
-#define SIOD_GPIO_NUM     40
-#define SIOC_GPIO_NUM     39
-
-#define Y9_GPIO_NUM       48
-#define Y8_GPIO_NUM       11
-#define Y7_GPIO_NUM       12
-#define Y6_GPIO_NUM       14
-#define Y5_GPIO_NUM       16
-#define Y4_GPIO_NUM       18
-#define Y3_GPIO_NUM       17
-#define Y2_GPIO_NUM       15
-#define VSYNC_GPIO_NUM    38
-#define HREF_GPIO_NUM     47
-#define PCLK_GPIO_NUM     13
+#define TRIG_PIN 21
+#define ECHO_PIN 19
 
 NimBLECharacteristic* pCharacteristic = nullptr;
 NimBLEServer* pServer = nullptr;
 
-// Variáveis de controle
-bool cameraInitialized = false;
 bool deviceConnected = false;
+bool sensorActive = false;
 
-// Declaração das funções
-void sendPhoto();
-void initializeCamera();
-
-// ...existing code...
 class MyServerCallbacks : public NimBLEServerCallbacks {
   void onConnect(NimBLEServer* pServer) override {
     deviceConnected = true;
     Serial.println("🔗 Cliente BLE conectado!");
-    // Não inicializa a câmera aqui!
   }
 
   void onDisconnect(NimBLEServer* pServer) override {
     deviceConnected = false;
+    sensorActive = false; // Desativa sensor ao desconectar
     Serial.println("❌ Cliente BLE desconectado!");
-    if (cameraInitialized) {
-      esp_camera_deinit();
-      cameraInitialized = false;
-      Serial.println("📷 Câmera desligada para economizar energia");
-    }
     NimBLEDevice::getAdvertising()->start();
     Serial.println("🔄 Aguardando nova conexão...");
   }
@@ -58,7 +31,6 @@ class MyServerCallbacks : public NimBLEServerCallbacks {
 class MyCallbacks : public NimBLECharacteristicCallbacks {
   void onWrite(NimBLECharacteristic* pCharacteristic) override {
     std::string value = pCharacteristic->getValue();
-
     Serial.print("Recebido via BLE: ");
     Serial.println(value.c_str());
 
@@ -68,138 +40,38 @@ class MyCallbacks : public NimBLECharacteristicCallbacks {
     }
 
     if (value == "ON") {
-      if (!cameraInitialized) {
-        Serial.println("Comando LIGAR recebido!");
-        Serial.println("📷 Inicializando câmera...");
-        initializeCamera();
-      }
-      if (cameraInitialized) {
-        Serial.println("📸 Capturando foto...");
-        sendPhoto();
-      }
+      sensorActive = true;
+      Serial.println("✅ Sensor ultrassônico ativado!");
     } else if (value == "STATUS") {
-      String status = "Camera: " + String(cameraInitialized ? "ON" : "OFF") + 
-                     ", BLE: " + String(deviceConnected ? "Connected" : "Disconnected");
+      String status = "Sensor: " + String(sensorActive ? "ON" : "OFF") +
+                      ", BLE: " + String(deviceConnected ? "Connected" : "Disconnected");
       pCharacteristic->setValue(status.c_str());
       pCharacteristic->notify();
     } else {
-      Serial.println("❓ Comando desconhecido. Use 'ON' para foto ou 'STATUS' para status");
+      Serial.println("❓ Comando desconhecido. Use 'ON' para ativar ou 'STATUS' para status");
     }
   }
 };
-// ...existing code...
-
-void initializeCamera() {
-  camera_config_t config;
-  config.ledc_channel = LEDC_CHANNEL_0;
-  config.ledc_timer   = LEDC_TIMER_0;
-  config.pin_d0       = Y2_GPIO_NUM;
-  config.pin_d1       = Y3_GPIO_NUM;
-  config.pin_d2       = Y4_GPIO_NUM;
-  config.pin_d3       = Y5_GPIO_NUM;
-  config.pin_d4       = Y6_GPIO_NUM;
-  config.pin_d5       = Y7_GPIO_NUM;
-  config.pin_d6       = Y8_GPIO_NUM;
-  config.pin_d7       = Y9_GPIO_NUM;
-  config.pin_xclk     = XCLK_GPIO_NUM;
-  config.pin_pclk     = PCLK_GPIO_NUM;
-  config.pin_vsync    = VSYNC_GPIO_NUM;
-  config.pin_href     = HREF_GPIO_NUM;
-  config.pin_sccb_sda = SIOD_GPIO_NUM;
-  config.pin_sccb_scl = SIOC_GPIO_NUM;
-  config.pin_pwdn     = PWDN_GPIO_NUM;
-  config.pin_reset    = RESET_GPIO_NUM;
-  config.xclk_freq_hz = 20000000;
-  config.pixel_format = PIXFORMAT_JPEG;
-
-  config.frame_size   = FRAMESIZE_QVGA; // 320x240
-  config.jpeg_quality = 10;
-  config.fb_count     = 1;
-
-  esp_err_t err = esp_camera_init(&config);
-  if (err != ESP_OK) {
-    Serial.printf("❌ Falha ao iniciar câmera: 0x%x\n", err);
-    cameraInitialized = false;
-    return;
-  }
-
-  cameraInitialized = true;
-  Serial.println("✅ Câmera inicializada com sucesso!");
-  
-  // Envia confirmação via BLE se conectado
-  if (deviceConnected && pCharacteristic) {
-    pCharacteristic->setValue("CAMERA_READY");
-    pCharacteristic->notify();
-  }
-}
-
-void sendPhoto() {
-  if (!cameraInitialized) {
-    Serial.println("❌ Câmera não está inicializada");
-    return;
-  }
-
-  camera_fb_t* fb = esp_camera_fb_get();
-  if (!fb) {
-    Serial.println("❌ Falha ao capturar imagem");
-    if (pCharacteristic) {
-      pCharacteristic->setValue("ERROR_CAPTURE_FAILED");
-      pCharacteristic->notify();
-    }
-    return;
-  }
-
-  Serial.printf("📸 Imagem capturada (%d bytes)\n", fb->len);
-
-  // Envia tamanho da imagem primeiro
-  String sizeInfo = "SIZE:" + String(fb->len);
-  pCharacteristic->setValue(sizeInfo.c_str());
-  pCharacteristic->notify();
-  delay(50);
-
-  // Fragmenta a imagem em pacotes
-  const size_t packetSize = 200;
-  size_t totalPackets = (fb->len + packetSize - 1) / packetSize;
-  
-  for (size_t i = 0; i < fb->len; i += packetSize) {
-    size_t currentPacket = i / packetSize + 1;
-    size_t chunkSize = (i + packetSize < fb->len) ? packetSize : (fb->len - i);
-    
-    Serial.printf("📤 Enviando pacote %d/%d (%d bytes)\n", currentPacket, totalPackets, chunkSize);
-    
-    pCharacteristic->setValue(fb->buf + i, chunkSize);
-    pCharacteristic->notify();
-    delay(20); // Pequena pausa entre pacotes
-  }
-
-  Serial.println("✅ Imagem enviada via BLE!");
-  
-  // Sinal de fim de transmissão
-  pCharacteristic->setValue("END_TRANSMISSION");
-  pCharacteristic->notify();
-
-  esp_camera_fb_return(fb);
-}
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("🚀 Iniciando ESP32-S3-CAM com BLE...");
 
-  // Inicializa apenas o BLE
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  Serial.println("🚀 Iniciando ESP32 com BLE...");
+
   NimBLEDevice::init("ESP32-CAM-BLE");
-
   pServer = NimBLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
 
   NimBLEService* pService = pServer->createService(SERVICE_UUID);
-
   pCharacteristic = pService->createCharacteristic(
                       CHARACTERISTIC_UUID,
                       NIMBLE_PROPERTY::READ |
                       NIMBLE_PROPERTY::WRITE |
                       NIMBLE_PROPERTY::NOTIFY
                     );
-
   pCharacteristic->setCallbacks(new MyCallbacks());
   pService->start();
 
@@ -211,19 +83,46 @@ void setup() {
   pAdvertising->start();
 
   Serial.println("✅ BLE iniciado!");
-  Serial.println("📡 Aguardando conexão BLE para inicializar câmera...");
-  Serial.println("🔍 Nome do dispositivo: ESP32-S3-CAM-BLE");
+  Serial.println("📡 Aguardando conexão BLE...");
 }
 
 void loop() {
-  // Status periódico (opcional)
-  static unsigned long lastStatus = 0;
-  if (millis() - lastStatus > 10000) { // A cada 30 segundos
-    lastStatus = millis();
-    Serial.printf("📊 Status: BLE=%s, Camera=%s\n", 
-                  deviceConnected ? "Conectado" : "Desconectado",
-                  cameraInitialized ? "Inicializada" : "Desligada");
+  if (sensorActive) {
+    // Gera pulso de trigger
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+
+    long duration = pulseIn(ECHO_PIN, HIGH, 30000); // timeout 30ms
+    float distance_cm;
+
+    if (duration == 0) {
+      distance_cm = -1;
+    } else {
+      distance_cm = (duration / 2.0) * 0.0343;
+    }
+
+    if (distance_cm < 0) {
+      Serial.println("Nenhum obstáculo detectado");
+    } else if (distance_cm > 100 && distance_cm <= 300) {
+      Serial.println("⚠️ Objeto se aproximando");
+    } else if (distance_cm <= 100 && distance_cm > 30) {
+      Serial.println("🚨 Objeto próximo");
+    } else if (distance_cm <= 30) {
+      Serial.println("❗ Objeto ao lado");
+    }
+
+    delay(200); // Ajuste da frequência de leitura
   }
-  
-  delay(1000);
+
+  // Status periódico opcional
+  static unsigned long lastStatus = 0;
+  if (millis() - lastStatus > 10000) {
+    lastStatus = millis();
+    Serial.printf("📊 Status: BLE=%s, Sensor=%s\n",
+                  deviceConnected ? "Conectado" : "Desconectado",
+                  sensorActive ? "Ativo" : "Inativo");
+  }
 }
