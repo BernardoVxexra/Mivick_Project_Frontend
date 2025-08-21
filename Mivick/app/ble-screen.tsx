@@ -16,18 +16,25 @@ export default function BleScreen() {
   const [connected, setConnected] = useState(false);
   const [imageChunks, setImageChunks] = useState<string[]>([]);
   const navigation = useNavigation<any>();
+  let subscription: any = null;
 
-useEffect(() => {
-  const run = async () => {
-    await startScan(); 
-  };
+  useEffect(() => {
+    const run = async () => {
+      await startScan();
+    };
 
-  run();
+    run();
 
-  return () => {
-    manager.destroy();
-  };
-}, []);
+    return () => {
+      console.log("🧹 Limpando BLE...");
+      if (subscription) {
+        subscription.remove();
+        console.log("🔌 Listener removido");
+      }
+      manager.stopDeviceScan();
+      manager.destroy();
+    };
+  }, []);
 
   async function requestPermissions(): Promise<boolean> {
     if (Platform.OS !== 'android') return true;
@@ -51,10 +58,11 @@ useEffect(() => {
 
     manager.startDeviceScan(null, null, (error, scannedDevice) => {
       if (error) {
-        console.error('scan error', error);
+        console.error('❌ Scan error', error);
         return;
       }
       if (scannedDevice && scannedDevice.name === DEVICE_NAME) {
+        console.log("📡 Encontrado:", scannedDevice.name);
         manager.stopDeviceScan();
         connectToDevice(scannedDevice);
       }
@@ -67,25 +75,35 @@ useEffect(() => {
       setConnected(true);
       await connectedDevice.discoverAllServicesAndCharacteristics();
       setDevice(connectedDevice);
-      console.log('Conectado a', connectedDevice.name);
+      console.log('✅ Conectado a', connectedDevice.name);
 
-      // Ativar notificações
-      connectedDevice.monitorCharacteristicForService(
+      // Ativar notificações com unsubscribe
+      subscription = connectedDevice.monitorCharacteristicForService(
         SERVICE_UUID,
         CHARACTERISTIC_UUID,
         (error, characteristic: Characteristic | null) => {
           if (error) {
-            console.error('Erro monitor:', error);
+            console.error('❌ Erro monitor:', error);
             return;
           }
           if (characteristic?.value) {
             const chunk = Buffer.from(characteristic.value, 'base64').toString('binary');
-            setImageChunks(prev => [...prev, chunk]);
+
+            // Evita estourar memória
+            setImageChunks(prev => {
+              const next = [...prev, chunk];
+              if (next.length > 10000) { 
+                console.warn("⚠️ Muitos pacotes acumulados, limpando buffer!");
+                return [];
+              }
+              return next;
+            });
           }
         }
       );
+
     } catch (e) {
-      console.error('Erro ao conectar:', e);
+      console.error('❌ Erro ao conectar:', e);
       Alert.alert('Erro', 'Falha ao conectar ao dispositivo.');
     }
   }
@@ -98,19 +116,27 @@ useEffect(() => {
         CHARACTERISTIC_UUID,
         Buffer.from(cmd, 'utf-8').toString('base64')
       );
-      console.log('Comando enviado:', cmd);
+      console.log('📤 Comando enviado:', cmd);
 
       if (cmd === 'ON') {
-        // Espera um pouco para juntar os pacotes e depois abre o histórico
         setTimeout(() => {
-          const fullBinary = imageChunks.join('');
-          const base64Image = Buffer.from(fullBinary, 'binary').toString('base64');
-          navigation.navigate('historico', { image: `data:image/jpeg;base64,${base64Image}` });
-          setImageChunks([]); // limpa para próxima captura
+          if (imageChunks.length === 0) {
+            console.warn("⚠️ Nenhum pacote recebido!");
+            return;
+          }
+          try {
+            const fullBinary = imageChunks.join('');
+            const base64Image = Buffer.from(fullBinary, 'binary').toString('base64');
+            console.log("🖼️ Imagem montada, tamanho:", base64Image.length);
+            navigation.navigate('historico', { image: `data:image/jpeg;base64,${base64Image}` });
+          } catch (err) {
+            console.error("❌ Erro ao converter imagem:", err);
+          }
+          setImageChunks([]); // limpa buffer
         }, 3000);
       }
     } catch (e) {
-      console.error('Erro ao enviar comando:', e);
+      console.error('❌ Erro ao enviar comando:', e);
       Alert.alert('Erro', 'Falha ao enviar comando.');
     }
   }

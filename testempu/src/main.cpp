@@ -5,8 +5,8 @@
 
 Adafruit_MPU6050 mpu;
 
-#define MPU_SDA 2
-#define MPU_SCL 3
+#define MPU_SDA 20
+#define MPU_SCL 21
 
 void setup() {
   Serial.begin(115200);
