@@ -116,7 +116,9 @@ void loop() {
     } else if (distance_cm > 100 && distance_cm <= 300) {
       Serial.printf("⚠️ Objeto a %.2f cm -> se aproximando\n", distance_cm);
     } else if (distance_cm <= 100 && distance_cm > 30) {
-      Serial.printf("🚨 Objeto a %.2f cm -> próximo\n", distance_cm);
+        Serial.printf("🚨 Objeto a %.2f cm -> próximo\n", distance_cm);
+        pCharacteristic->setValue("FOTO");   // envia comando BLE
+        pCharacteristic->notify();
     } else if (distance_cm <= 30) {
       Serial.printf("❗ Objeto a %.2f cm -> AO LADO\n", distance_cm);
     }
