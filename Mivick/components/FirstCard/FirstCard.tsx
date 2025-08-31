@@ -1,26 +1,16 @@
-import React, { ReactNode } from 'react';
-import { Text, StyleSheet, TextStyle } from 'react-native';
+import React from 'react';
+import { View, Text } from 'react-native';
 
-type FirstTitleProps = {
-  children: ReactNode;
-  style?: TextStyle | TextStyle[];
+interface CardProps {
+  children: React.ReactNode;
+}
+
+const FirstCard = ({ children }: CardProps) => {
+  return (
+    <View className="bg-gray-800 rounded-lg p-4 my-2">
+      {children}
+    </View>
+  );
 };
 
-const FirstTitle = ({ children, style }: FirstTitleProps) => (
-  <Text style={[styles.title, style]}>
-    {children}
-  </Text>
-);
-
-const styles = StyleSheet.create({
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#22223b',
-    textAlign: 'center',
-    marginVertical: 16,
-    letterSpacing: 1,
-  },
-});
-
-export { FirstTitle };
+export {FirstCard} ;

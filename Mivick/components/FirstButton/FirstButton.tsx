@@ -1,32 +1,18 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, GestureResponderEvent, ViewStyle, TextStyle } from 'react-native';
+import { TouchableOpacity, Text } from 'react-native';
 
-type FirstButton= {
-  title: string;
-  onPress: (event: GestureResponderEvent) => void;
-  style?: ViewStyle | ViewStyle[];
-  textStyle?: TextStyle | TextStyle[];
+interface ButtonProps {
+  text: string;
+}
+
+const FirstButton = ({ text }: ButtonProps) => {
+  return (
+    <TouchableOpacity className="btn w-full p-4">
+      <Text className="text-white font-sans-bold-pro text-lg">
+        {text}
+      </Text>
+    </TouchableOpacity>
+  );
 };
 
-const FirstButton = ({ title, onPress, style, textStyle }: FirstButton) => (
-  <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
-    <Text style={[styles.text, textStyle]}>{title}</Text>
-  </TouchableOpacity>
-);
-
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: '#F85200',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  text: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});
-
-export { FirstButton };
+export {FirstButton} ;

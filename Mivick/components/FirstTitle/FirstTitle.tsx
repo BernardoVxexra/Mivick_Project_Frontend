@@ -1,26 +1,16 @@
-import React, { ReactNode } from 'react';
-import { Text, StyleSheet, TextStyle } from 'react-native';
+import React from 'react';
+import { Text } from 'react-native';
 
-type FirstTitle = {
-  children: ReactNode;
-  style?: TextStyle | TextStyle[];
+interface TitleProps {
+  text: string;
+}
+
+const FirstTitle = ({ text }: TitleProps) => {
+  return (
+    <Text className="text-4xl font-sans-bold-pro text-white mb-2">
+      {text}
+    </Text>
+  );
 };
-
-const FirstTitle = ({ children, style }: FirstTitle) => (
-  <Text style={[styles.title, style]}>
-    {children}
-  </Text>
-);
-
-const styles = StyleSheet.create({
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#22223b',
-    textAlign: 'center',
-    marginVertical: 16,
-    letterSpacing: 1,
-  },
-});
 
 export { FirstTitle };
