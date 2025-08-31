@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+
+type KeyBoardProps = {
+  onKeyPress?: (key: string) => void;
+  style?: ViewStyle | ViewStyle[];
+  keyStyle?: ViewStyle | ViewStyle[];
+  keyTextStyle?: TextStyle | TextStyle[];
+};
 
 const keys = [
   ['1', '2', '3'],
@@ -8,17 +15,17 @@ const keys = [
   ['←', '0', 'OK'],
 ];
 
-const KeyBoard = ({ onKeyPress, style }) => (
+const KeyBoard = ({ onKeyPress, style, keyStyle, keyTextStyle }: KeyBoardProps) => (
   <View style={[styles.container, style]}>
     {keys.map((row, rowIndex) => (
       <View key={rowIndex} style={styles.row}>
         {row.map((key) => (
           <TouchableOpacity
             key={key}
-            style={styles.key}
+            style={[styles.key, keyStyle]}
             onPress={() => onKeyPress && onKeyPress(key)}
           >
-            <Text style={styles.keyText}>{key}</Text>
+            <Text style={[styles.keyText, keyTextStyle]}>{key}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -54,4 +61,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default KeyBoard;
+export { KeyBoard };

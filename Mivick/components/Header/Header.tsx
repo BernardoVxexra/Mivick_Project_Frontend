@@ -1,14 +1,21 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Certifique-se de ter @expo/vector-icons instalado
+import { View, Text, TouchableOpacity, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-const Header = ({ title = "Mivick Project", onMenuPress, style }) => (
+type HeaderProps = {
+  title?: string;
+  onMenuPress?: () => void;
+  style?: ViewStyle | ViewStyle[];
+  titleStyle?: TextStyle | TextStyle[];
+};
+
+const Header = ({ title = "Mivick Project", onMenuPress, style, titleStyle }: HeaderProps) => (
   <View style={[styles.container, style]}>
     <TouchableOpacity onPress={onMenuPress} style={styles.menuButton}>
       <Ionicons name="menu" size={28} color="#22223b" />
     </TouchableOpacity>
-    <Text style={styles.title}>{title}</Text>
-    <View style={{ width: 40 }} /> {/* Espaço para alinhar o título ao centro */}
+    <Text style={[styles.title, titleStyle]}>{title}</Text>
+    <View style={{ width: 40 }} />
   </View>
 );
 
@@ -40,4 +47,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Header;
+export { Header };
