@@ -1,16 +1,32 @@
-import { View, Button } from 'react-native';
+// Mivick/app/index.tsx (antigo WelcomeScreen.tsx)
+import React from 'react';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import "./global.css";
+import { FirstButton } from '@/components/FirstButton/FirstButton';
 
-export default function Index() {
+const index = () => {
   const router = useRouter();
-
+  
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Button title="Conectar dispositivo" onPress={() => router.push('/ble-screen')} />
-      <Button title="Hístorico " onPress={() => router.push('/historico')} />
+    <View className="flex-1 bg-background">
+      <Image
+        source={require('../assets/carousel-1.jpg')}
+        className="absolute w-full h-full"
+        resizeMode="cover"
+      />
+      <View className="absolute bottom-10 w-full px-8">
+        <Text className="text-white text-center text-4xl font-sans-bold-pro mb-8">
+          Mivick
+        </Text>
+        <FirstButton text="Entrar" onPress={() => router.push('/(screens)/home')} />
+        <TouchableOpacity className="mt-4 items-center" onPress={() => router.push('/(screens)/home')}>
+          <Text className="text-primary font-sans-bold-pro text-lg">
+            Cadastre-se
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
-}
+};
 
 // eas build -p android --profile production  (gera o app)
