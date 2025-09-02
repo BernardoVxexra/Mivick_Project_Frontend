@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
+
 
 // Importando os componentes
 import { Header } from '@/components/Header/index';
@@ -9,7 +11,7 @@ import { FirstTextField } from '@/components/FirstTextField/index';
 import { FirstButton } from '@/components/FirstButton/index';
 import "./global.css";
 
-const CadastroScreen = () => {
+const cadastro = () => {
   const router = useRouter();
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
@@ -34,9 +36,7 @@ const CadastroScreen = () => {
 
         {/* Botão de "Cadastre-se com Google" */}
         <TouchableOpacity className="flex-row items-center justify-center p-4 bg-gray-700 rounded-lg">
-          <Text className="text-white text-lg font-sans-regular-pro">
-            G
-          </Text>
+         <FontAwesome name="google" size={24} color="#fff" />
           <Text className="ml-2 text-white font-sans-regular-pro text-lg">
             Cadastre-se com Google
           </Text>
@@ -61,4 +61,4 @@ const CadastroScreen = () => {
   );
 };
 
-export default CadastroScreen;
+export default cadastro;

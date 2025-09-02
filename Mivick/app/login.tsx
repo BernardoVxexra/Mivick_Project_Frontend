@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
 
 // Importando os componentes
 import { Header } from '@/components/Header/index';
@@ -9,7 +10,7 @@ import { FirstTextField } from '@/components/FirstTextField/index';
 import { FirstButton } from '@/components/FirstButton/index';
 import "./global.css";
 
-const LoginScreen = () => {
+const login = () => {
   const router = useRouter();
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
@@ -38,6 +39,7 @@ const LoginScreen = () => {
 
         {/* Botão de "Login com Google" */}
         <TouchableOpacity className="flex-row items-center justify-center p-4 bg-gray-700 rounded-lg">
+          <FontAwesome name="google" size={24} color="#fff" />
           <Text className="text-white text-lg font-sans-regular-pro">
             G
           </Text>
@@ -65,4 +67,4 @@ const LoginScreen = () => {
   );
 };
 
-export default LoginScreen;
+export default login;
