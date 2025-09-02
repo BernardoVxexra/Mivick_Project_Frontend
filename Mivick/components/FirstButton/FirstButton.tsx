@@ -1,20 +1,23 @@
-// Mivick/components/FirstButton/index.tsx
 import React from 'react';
 import { TouchableOpacity, Text, TouchableOpacityProps } from 'react-native';
 
-// Defina a interface para as props do seu componente
 interface ButtonProps extends TouchableOpacityProps {
   text: string;
+  className?: string;
+  textClassName?: string;
 }
 
-const FirstButton = ({ text, ...props }: ButtonProps) => {
+const FirstButton = ({ text, className, textClassName, ...props }: ButtonProps) => {
   return (
-    <TouchableOpacity className="btn w-full p-4" {...props}>
-      <Text className="text-white font-sans-bold-pro text-lg">
+    <TouchableOpacity 
+      className={`w-full py-4 rounded-lg items-center ${className}`} 
+      {...props}
+    >
+      <Text className={`text-xl font-sans-bold-pro text-white ${textClassName}`}>
         {text}
       </Text>
     </TouchableOpacity>
   );
 };
 
-export {FirstButton} ;
+export { FirstButton };

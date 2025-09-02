@@ -2,30 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
-  Aplica as classes globais no 'layer base'.
-  Isso garante que elas sejam aplicadas antes das utilidades.
-*/
 @layer base {
- 
   View {
     @apply bg-background;
   }
   Text {
     @apply text-white font-sans-bold-pro;
   }
-
-  
   .btn {
     @apply bg-primary rounded-lg items-center justify-center;
   }
-
- 
   .input {
     @apply bg-gray-600 border border-gray-500 rounded-lg p-3 text-white placeholder-gray-400;
   }
-
-  
   .icon {
     @apply text-primary;
   }
@@ -33,7 +22,8 @@
 
 @layer components {
   .header {
-    @apply flex-row justify-between items-center py-4 px-6 bg-transparent;
+
+    @apply flex-row justify-between items-center py-4 px-6 bg-headerOrange; 
   }
   .nav-button {
     @apply w-12 h-12 items-center justify-center;
