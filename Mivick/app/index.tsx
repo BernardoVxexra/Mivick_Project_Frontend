@@ -47,11 +47,10 @@ const index = () => {
           text="Cadastro" 
           className="bg-transparent border-2 border-[#F85200]" 
           textClassName="text-[#F85200]" 
-          onPress={() => router.push('/cadastro')}
+          onPress={() => router.push('/cadatro')}
         />
       </View>
     </View>
   );
 };
 
-export default index;
