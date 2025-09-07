@@ -3,68 +3,57 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 
-// Importando os componentes
-import { Header } from '@/components/Header/index';
-import { FirstTitle } from '@/components/FirstTitle/index';
-import { FirstTextField } from '@/components/FirstTextField/index';
-import { FirstButton } from '@/components/FirstButton/index';
-import "./global.css";
+// Componentes
+import { Header } from '@/components/Header';
+import { FirstTitle } from '@/components/FirstTitle';
+import { FirstTextField } from '@/components/FirstTextField';
+import { FirstButton } from '@/components/FirstButton';
 
-const login = () => {
+import { styles } from './styleLogin';
+
+export default function Login() {
   const router = useRouter();
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   return (
-    <View className="flex-1 bg-black">
-      {/* Header com a logo */}
+    <View style={styles.container}>
       <Header />
 
-      <View className="p-8">
-        {/* Título "Login" */}
-        <FirstTitle text="Login" className="mt-8 mb-4" />
+      <View style={styles.content}>
+        <FirstTitle text="Login" />
 
-        {/* Campos de Input */}
         <FirstTextField placeholder="Nome" />
-        <FirstTextField placeholder="Senha" className="mt-4" secureTextEntry />
+        <FirstTextField placeholder="Senha" secureTextEntry style={{ marginTop: 16 }} />
 
-        {/* Link "Esqueceu a senha" */}
-        <TouchableOpacity className="self-end mt-2">
-          <Text className="text-[#F85200] font-sans-regular-pro text-base">
-            Esqueceu a senha
-          </Text>
+        <TouchableOpacity style={styles.forgotPassword}>
+          <Text style={styles.forgotPasswordText}>Esqueceu a senha</Text>
         </TouchableOpacity>
 
-        {/* Botão de Login principal */}
-        <FirstButton text="Login" className="bg-[#F85200] mt-8 mb-4" onPress={() => console.log("Login com nome e senha")} />
+        <FirstButton
+          title="Login"
+          onPress={() => console.log("Login com nome e senha")}
+          customStyle={styles.loginButton}
+        />
 
-        {/* Botão de "Login com Google" */}
-        <TouchableOpacity className="flex-row items-center justify-center p-4 bg-gray-700 rounded-lg">
+        <TouchableOpacity style={styles.googleButton}>
           <FontAwesome name="google" size={24} color="#fff" />
-          <Text className="text-white text-lg font-sans-regular-pro">
-            G
-          </Text>
-          <Text className="ml-2 text-white font-sans-regular-pro text-lg">
-            Login com Google
-          </Text>
+          <Text style={styles.googleButtonText}> Login com Google</Text>
         </TouchableOpacity>
 
-        {/* Checkbox e Termos de Uso */}
-        <View className="flex-row items-center mt-4">
+        <View style={styles.checkboxContainer}>
           <TouchableOpacity
-            className={`w-6 h-6 rounded border-2 ${agreeToTerms ? 'bg-[#F85200] border-[#F85200]' : 'border-white'}`}
+            style={[
+              styles.checkbox,
+              agreeToTerms && styles.checkboxChecked
+            ]}
             onPress={() => setAgreeToTerms(!agreeToTerms)}
           />
-          <Text className="ml-2 text-white font-sans-regular-pro text-sm">
-            Ao clicar, você concorda com os 
-            <Text className="text-[#F85200]">
-              termos de uso
-            </Text>
-            do aplicativo.
+          <Text style={styles.checkboxText}>
+            Ao clicar, você concorda com os{' '}
+            <Text style={styles.termsText}>termos de uso</Text> do aplicativo.
           </Text>
         </View>
       </View>
     </View>
   );
-};
-
-export default login;
+}

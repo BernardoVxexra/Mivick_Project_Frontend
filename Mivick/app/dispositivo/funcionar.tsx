@@ -1,6 +1,6 @@
 import { View, Button } from 'react-native';
 import { useRouter } from 'expo-router';
-import "./global.css";
+
 
  // export default function funcionar() {
 //  const router = useRouter();

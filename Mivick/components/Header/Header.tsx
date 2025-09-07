@@ -1,14 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text } from 'react-native';
+import { styles } from './styleHeader';
 
-const Header = () => {
+export function Header() {
   return (
-    <View className="flex-row justify-between items-center p-4">
-    
-      <Text className="text-xl font-sans-bold-pro text-white">Mivick</Text>
-      <View className="w-6" /> {/* Espaço vazio para manter o alinhamento */}
+    <View style={styles.header}>
+      <Text style={styles.title}>Mivick</Text>
+      <View style={styles.spacer} />
     </View>
   );
-};
-
-export { Header };
+}

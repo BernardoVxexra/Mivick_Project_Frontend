@@ -1,17 +1,11 @@
 import React from 'react';
 import { Text } from 'react-native';
+import { styles } from '../FirstTitle/styleTitle';
 
-interface TitleProps {
+interface Props {
   text: string;
-  className?: string;
 }
 
-const FirstTitle = ({ text, className }: TitleProps) => {
-  return (
-    <Text className={`text-4xl font-sans-bold-pro text-white ${className}`}>
-      {text}
-    </Text>
-  );
-};
-
-export { FirstTitle };
+export function FirstTitle({ text }: Props) {
+  return <Text style={styles.title}>{text}</Text>;
+}

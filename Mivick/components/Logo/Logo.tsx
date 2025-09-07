@@ -1,19 +1,14 @@
 import React from 'react';
 import { View, Image } from 'react-native';
+import { styles } from './styleLogo';
 
-interface LogoProps {
-  className?: string; // Adicione a interface para aceitar a prop className
-}
-
-const Logo = ({ className }: LogoProps) => {
+export function Logo() {
   return (
-    <View className={`items-center ${className}`}> 
+    <View style={styles.container}>
       <Image
-        source={require('../../assets/logo.png')} // Ajuste o caminho
-        className="w-24 h-24"
+        source={require('../../assets/logo.png')}
+        style={styles.logoImage}
       />
     </View>
   );
-};
-
-export { Logo } ;
+}

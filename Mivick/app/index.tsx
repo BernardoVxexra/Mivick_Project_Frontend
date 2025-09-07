@@ -1,56 +1,52 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 
-// Importando os componentes
-import { Carousel } from '@/components/FirstCarrousel/FirstCarrousel';
-import { FirstButton } from '@/components/FirstButton/index';
-import "./global.css";
+// Componentes ajustados
+import { FirstButton } from '@/components/FirstButton';
+import { FirstCarrousel } from '@/components/FirstCarrousel';
+import { styles } from './styleHome';
 
-// Substitua com as imagens do seu carrossel
+// Imagens do carrossel
 const carouselImages = [
-  require('../assets/Images/carousel_image_1.jpeg'),
-  require('../assets/Images/carousel_image_2.jpeg'),
-  require('../assets/Images/carousel_image_3.jpeg'),
+  require('../assets/images/primeira-bike1.jpg'),
+  require('../assets/images/segunda.webp'),
+  require('../assets/images/terceira.jpg'),
 ];
 
-const index = () => {
+export default function Home() {
   const router = useRouter();
 
   return (
-    <View className="flex-1 bg-black">
-      {/* Componente Carrossel de Fundo */}
-      <Carousel images={carouselImages} />
-      
-      {/* Conteúdo sobreposto ao carrossel */}
-      <View className="absolute flex-1 w-full h-full justify-between items-center py-10">
-        
-        {/* Nome do Aplicativo "Mivick" */}
-        <View className="px-6 py-3 bg-gray-800 rounded-full opacity-90 mt-12">
-          <Text className="text-[#F85200] text-4xl font-sans-bold-pro tracking-widest">
-            Mivick
-          </Text>
+    <View style={styles.container}>
+      {/* Carrossel de fundo */}
+      <FirstCarrousel images={carouselImages} />
+
+      {/* Conteúdo sobreposto */}
+      <View style={styles.overlayContent}>
+        {/* Nome do App */}
+        <View style={styles.appNameContainer}>
+          <Text style={styles.appNameText}>Mivick</Text>
         </View>
 
-        <View className="mb-4" /> {/* Adiciona um espaço para manter o layout */}
-
+        <View style={{ height: 16 }} /> {/* Espaço extra */}
       </View>
 
-      {/* Botões Login e Cadastro (na parte inferior) */}
-      <View className="absolute bottom-0 w-full px-8 pb-8 bg-black">
-        <FirstButton 
-          text="Login" 
-          className="bg-[#F85200] mb-4"
-          onPress={() => router.push('/login')} 
+      {/* Botões Login e Cadastro na parte inferior */}
+      <View style={styles.bottomButtons}>
+        <FirstButton
+          title="Login"
+          onPress={() => router.push('/login')}
+          customStyle={styles.loginButton}
+          customTextStyle={styles.loginButtonText}
         />
-        <FirstButton 
-          text="Cadastro" 
-          className="bg-transparent border-2 border-[#F85200]" 
-          textClassName="text-[#F85200]" 
+        <FirstButton
+          title="Cadastro"
           onPress={() => router.push('/cadastro')}
+          customStyle={styles.signupButton}
+          customTextStyle={styles.signupButtonText}
         />
       </View>
     </View>
   );
-};
-
+}

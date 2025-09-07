@@ -1,23 +1,18 @@
 import React from 'react';
-import { TouchableOpacity, Text, TouchableOpacityProps } from 'react-native';
+import { Text, TouchableOpacity, StyleProp, ViewStyle, TextStyle } from 'react-native';
+import { styles } from './styleButton';
 
-interface ButtonProps extends TouchableOpacityProps {
-  text: string;
-  className?: string;
-  textClassName?: string;
+interface Props {
+  title: string;
+  onPress: () => void;
+  customStyle?: StyleProp<ViewStyle>;      // ✅ permite sobrescrever o estilo do botão
+  customTextStyle?: StyleProp<TextStyle>;  // ✅ permite sobrescrever o estilo do texto
 }
 
-const FirstButton = ({ text, className, textClassName, ...props }: ButtonProps) => {
+export function FirstButton({ title, onPress, customStyle, customTextStyle }: Props) {
   return (
-    <TouchableOpacity 
-      className={`w-full py-4 rounded-lg items-center ${className}`} 
-      {...props}
-    >
-      <Text className={`text-xl font-sans-bold-pro text-white ${textClassName}`}>
-        {text}
-      </Text>
+    <TouchableOpacity style={[styles.btn, customStyle]} onPress={onPress}>
+      <Text style={[styles.text, customTextStyle]}>{title}</Text>
     </TouchableOpacity>
   );
-};
-
-export { FirstButton };
+}

@@ -1,20 +1,19 @@
 import React from 'react';
-import { TextInput, TextInputProps } from 'react-native';
+import { TextInput } from 'react-native';
+import { styles } from '../FirstTextField/styleTextField';
 
-interface TextFieldProps extends TextInputProps {
+interface Props {
   placeholder: string;
-  className?: string; // Prop para estilos adicionais
+  [key: string]: any; // para props extras
 }
 
-const FirstTextField = ({ placeholder, className, ...props }: TextFieldProps) => {
+export function FirstTextField({ placeholder, ...props }: Props) {
   return (
     <TextInput
       placeholder={placeholder}
-      placeholderTextColor="#A0AEC0"
-      className={`input ${className}`}
+      placeholderTextColor="#A0AEC0" // cor cinza de placeholder
+      style={styles.input}
       {...props}
     />
   );
-};
-
-export { FirstTextField };
+}
