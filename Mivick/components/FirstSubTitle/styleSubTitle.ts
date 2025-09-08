@@ -5,6 +5,7 @@ export const styles = StyleSheet.create({
     fontSize: 36,
     color: '#FFFFFF', // cor fixa
     marginBottom: 8,
-    // fontFamily: 'SuaFonteBoldPro', // opcional
+    fontFamily: "SansBoldPro",
+
   },
 });

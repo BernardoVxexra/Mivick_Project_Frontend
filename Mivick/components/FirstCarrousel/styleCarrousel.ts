@@ -17,18 +17,18 @@ export const styles = StyleSheet.create({
     backgroundColor: 'black',
     opacity: 0.4,
   },
-  indicatorsContainer: {
-    position: 'absolute',
-    bottom: 160,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  indicator: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
+// ...existing code...
+indicatorsContainer: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginTop: 12,
+},
+indicator: {
+  width: 12,
+  height: 12,
+  borderRadius: 6,
+  marginHorizontal: 6,
+},
+// ...existing code...
 });
