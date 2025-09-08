@@ -16,10 +16,10 @@ export const styles = StyleSheet.create({
   },
   appNameContainer: {
     marginTop: 48,
-    paddingHorizontal: 24,
+    paddingHorizontal: 44,
     paddingVertical: 12,
     backgroundColor: '#2D2D2D',
-    borderRadius: 50,
+    borderRadius: 20,
     opacity: 0.9,
   },
   appNameText: {

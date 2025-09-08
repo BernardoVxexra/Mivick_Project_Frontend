@@ -8,7 +8,7 @@ export const styles = StyleSheet.create({
   },
   imageBackground: {
     width: '100%',
-    height: '100%',
+    height: '85%',
   },
   overlay: {
     position: 'absolute',
@@ -17,12 +17,13 @@ export const styles = StyleSheet.create({
     backgroundColor: 'black',
     opacity: 0.4,
   },
-// ...existing code...
+
 indicatorsContainer: {
   flexDirection: 'row',
   justifyContent: 'center',
   alignItems: 'center',
   marginTop: 12,
+  
 },
 indicator: {
   width: 12,
@@ -30,5 +31,5 @@ indicator: {
   borderRadius: 6,
   marginHorizontal: 6,
 },
-// ...existing code...
+
 });

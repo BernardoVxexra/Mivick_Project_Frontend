@@ -34,6 +34,16 @@ export default function Cadastro() {
           customStyle={styles.signupButton}
         />
 
+        <View
+    style={{
+      height: 2,          // espessura da linha
+      backgroundColor: '#F85200', // cor laranja
+      width: '100%',       // comprimento da linha
+      alignSelf: 'center',
+      marginVertical: 12, // espaço acima e abaixo da linha
+    }}
+          />
+
         <TouchableOpacity style={styles.googleButton}>
           <FontAwesome name="google" size={24} color="#fff" />
           <Text style={styles.googleButtonText}> Cadastre-se com Google</Text>
