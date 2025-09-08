@@ -6,7 +6,7 @@ export function Logo() {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../../assets/logo.png')}
+        source={require('../../assets/images/LogoPrincipal.png')}
         style={styles.logoImage}
       />
     </View>

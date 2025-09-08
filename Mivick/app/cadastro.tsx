@@ -22,11 +22,11 @@ export default function Cadastro() {
       <View style={styles.content}>
         <FirstTitle text="Cadastro" />
 
-        <FirstTextField placeholder="Nome" />
-        <FirstTextField placeholder="Telefone" style={{ marginTop: 16 }} />
-        <FirstTextField placeholder="Email" style={{ marginTop: 16 }} />
-        <FirstTextField placeholder="Senha" style={{ marginTop: 16 }} secureTextEntry />
-        <FirstTextField placeholder="Confirmar senha" style={{ marginTop: 16 }} secureTextEntry />
+        <FirstTextField placeholder="Nome" style={{ marginTop: 25 , backgroundColor: '#FFFFFF' , height: 50 , width: 335, borderRadius: 8, alignSelf: 'center', padding: 12, }} />
+        <FirstTextField placeholder="Telefone" style={{ marginTop: 25 , backgroundColor: '#FFFFFF' , height: 50 , width: 335, borderRadius: 8, alignSelf: 'center', padding: 12, }} />
+        <FirstTextField placeholder="Email" style={{  marginTop: 25 , backgroundColor: '#FFFFFF' , height: 50 , width: 335, borderRadius: 8, alignSelf: 'center', padding: 12, }} />
+        <FirstTextField placeholder="Senha" style={{  marginTop: 25 , backgroundColor: '#FFFFFF' , height: 50 , width: 335, borderRadius: 8, alignSelf: 'center', padding: 12, }} secureTextEntry />
+        <FirstTextField placeholder="Confirmar senha" style={{  marginTop: 25 , backgroundColor: '#FFFFFF' , height: 50 , width: 335, borderRadius: 8, alignSelf: 'center', padding: 12, }} secureTextEntry />
 
         <FirstButton
           title="Cadastre-se"
@@ -40,18 +40,20 @@ export default function Cadastro() {
         </TouchableOpacity>
 
         <View style={styles.checkboxContainer}>
-          <TouchableOpacity
-            style={[
-              styles.checkbox,
-              agreeToTerms && styles.checkboxChecked
-            ]}
-            onPress={() => setAgreeToTerms(!agreeToTerms)}
-          />
-          <Text style={styles.checkboxText}>
-            Ao clicar, você concorda com os{' '}
-            <Text style={styles.termsText}>termos de uso</Text> do aplicativo.
-          </Text>
-        </View>
+  <TouchableOpacity
+    style={[styles.checkbox, agreeToTerms && styles.checkboxChecked]}
+    onPress={() => setAgreeToTerms(!agreeToTerms)}
+  >
+    {agreeToTerms && (
+      <FontAwesome name="check" size={16} color="#FFFFFF" />
+    )}
+  </TouchableOpacity>
+
+  <Text style={styles.checkboxText}>
+    Ao clicar, você concorda com os{' '}
+    <Text style={styles.termsText}>termos de uso</Text> do aplicativo.
+  </Text>
+</View>
       </View>
     </View>
   );

@@ -11,6 +11,6 @@ export const styles = StyleSheet.create({
   text: {
     fontSize: 20,
     color: '#FFFFFF',
-    // se depois quiser fontes customizadas, adiciona aqui
+    fontFamily: "SansBoldPro"
   },
 });

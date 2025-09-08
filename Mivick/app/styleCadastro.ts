@@ -13,15 +13,17 @@ export const styles = StyleSheet.create({
     marginTop: 32,
     marginBottom: 16,
   },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    backgroundColor: '#4A5568',
-    borderRadius: 8,
-    marginTop: 16,
-  },
+ googleButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 16,
+  backgroundColor: 'transparent', // deixa o fundo transparente
+  borderRadius: 8,
+  marginTop: 16,
+  borderColor: '#F85200', // cor da borda
+  borderWidth: 2, // define a espessura da borda
+},
   googleButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
@@ -36,12 +38,14 @@ export const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: '#6D96FF',
     borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center', // centraliza o ícone
   },
   checkboxChecked: {
-    backgroundColor: '#F85200',
-    borderColor: '#F85200',
+    backgroundColor: '#6D96FF',
+    borderColor: '#FFFFFF',
   },
   checkboxText: {
     color: '#FFFFFF',
@@ -49,6 +53,6 @@ export const styles = StyleSheet.create({
     marginLeft: 8,
   },
   termsText: {
-    color: '#F85200',
+    color: '#6D96FF',
   },
 });

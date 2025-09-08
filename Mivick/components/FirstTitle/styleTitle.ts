@@ -5,5 +5,6 @@ export const styles = StyleSheet.create({
     fontSize: 48, // text-4xl equivalente
     color: '#FFFFFF',
     fontFamily: "SansBoldPro",
+    
   },
 });

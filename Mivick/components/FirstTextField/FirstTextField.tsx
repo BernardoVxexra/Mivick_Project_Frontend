@@ -9,11 +9,12 @@ interface Props {
 
 export function FirstTextField({ placeholder, ...props }: Props) {
   return (
-    <TextInput
-      placeholder={placeholder}
-      placeholderTextColor="#A0AEC0" // cor cinza de placeholder
-      style={styles.input}
-      {...props}
-    />
+   <TextInput
+  placeholder={placeholder}
+  placeholderTextColor="#A0AEC0"
+  style={[styles.input, props.style]} // <-- combina estilos
+  {...props}
+/>
+
   );
 }

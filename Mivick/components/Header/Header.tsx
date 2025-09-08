@@ -1,11 +1,23 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Logo } from '@/components/Logo';
 import { styles } from './styleHeader';
 
 export function Header() {
+  const router = useRouter();
+
   return (
     <View style={styles.header}>
-      <Text style={styles.title}>Mivick</Text>
+      {/* Espaço à esquerda */}
+      <View style={styles.spacer} />
+
+      {/* Logo central clicável */}
+      <TouchableOpacity onPress={() => router.push('/')}>
+        <Logo />
+      </TouchableOpacity>
+
+      {/* Espaço à direita */}
       <View style={styles.spacer} />
     </View>
   );
