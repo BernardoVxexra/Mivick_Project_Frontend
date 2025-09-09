@@ -1,11 +1,13 @@
-import React from 'react';
-import { View } from 'react-native';
-import { styles } from '../FirstCard/styleCard';
+// components/FirstCard.tsx
+import React, { ReactNode } from 'react';
+import { View, StyleProp, ViewStyle } from 'react-native';
+import { styles } from './styleCard';
 
-interface CardProps {
-  children: React.ReactNode;
+interface Props {
+  children: ReactNode;
+  customStyle?: StyleProp<ViewStyle>;
 }
 
-export function FirstCard({ children }: CardProps) {
-  return <View style={styles.cardContainer}>{children}</View>;
+export function FirstCard({ children, customStyle }: Props) {
+  return <View style={[styles.cardContainer, customStyle]}>{children}</View>;
 }

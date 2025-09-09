@@ -1,29 +1,38 @@
+// components/FirstCarrousel.tsx
 import React, { useState, useEffect } from 'react';
-import { View, ImageBackground, TouchableOpacity } from 'react-native';
-import { styles } from '../FirstCarrousel/styleCarrousel';
+import {
+  View,
+  ImageBackground,
+  TouchableOpacity,
+  ImageSourcePropType,
+  Text,
+} from 'react-native';
+import { styles } from './styleCarrousel';
 
 interface CarouselProps {
-  images: any[];
+  images: ImageSourcePropType[];   // agora obrigatório
+  autoPlayInterval?: number;       // opcional
 }
 
-export function FirstCarrousel({ images }: CarouselProps) {
+export function FirstCarrousel({ images, autoPlayInterval = 5000 }: CarouselProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const indicatorActiveColor = '#FF4500';
-  const indicatorInactiveColor = 'rgba(255, 255, 255, 0.4)';
-
-  // Timer para trocar imagem a cada 5 segundos
+  // autoplay
   useEffect(() => {
+    if (!images || images.length <= 1) return;
     const timer = setInterval(() => {
-      setActiveImageIndex((prevIndex) =>
-        prevIndex === images.length - 1 ? 0 : prevIndex + 1
-      );
-    }, 5000);
+      setActiveImageIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
+    }, autoPlayInterval);
     return () => clearInterval(timer);
-  }, [images.length]);
+  }, [images?.length, autoPlayInterval]);
 
-  // Garante sempre 3 pontos
-  const indicators = [0, 1, 2];
+  if (!images || images.length === 0) {
+    return (
+      <View style={[styles.carouselContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: '#fff' }}>Sem imagens</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.carouselContainer}>
@@ -33,26 +42,24 @@ export function FirstCarrousel({ images }: CarouselProps) {
         resizeMode="cover"
       >
         <View style={styles.overlay} />
-      </ImageBackground>
 
-      {/* Indicadores de navegação */}
-      <View style={styles.indicatorsContainer}>
-        {indicators.map((_, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.indicator,
-              {
-                backgroundColor:
-                  index === activeImageIndex
-                    ? indicatorActiveColor
-                    : indicatorInactiveColor,
-              },
-            ]}
-            onPress={() => setActiveImageIndex(index)}
-          />
-        ))}
-      </View>
+        {/* Indicadores */}
+        <View style={styles.indicatorsWrapper}>
+          {images.map((_, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.indicator,
+                index === activeImageIndex
+                  ? { backgroundColor: '#FF4500' }
+                  : { backgroundColor: 'rgba(255,255,255,0.35)' },
+              ]}
+              onPress={() => setActiveImageIndex(index)}
+              activeOpacity={0.8}
+            />
+          ))}
+        </View>
+      </ImageBackground>
     </View>
   );
 }

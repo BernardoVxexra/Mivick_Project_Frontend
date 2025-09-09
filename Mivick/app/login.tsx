@@ -31,7 +31,7 @@ export default function Login() {
 
         <FirstButton
           title="Login"
-          onPress={() => console.log("Login com nome e senha")}
+          onPress={() => router.push('/home1')}
           customStyle={styles.loginButton}
         />
 

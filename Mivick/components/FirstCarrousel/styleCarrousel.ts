@@ -1,35 +1,36 @@
-import { StyleSheet } from 'react-native';
+// styleCarrousel.ts
+import { StyleSheet, Dimensions } from 'react-native';
+const { height } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
   carouselContainer: {
-    flex: 1,
     width: '100%',
-    height: '100%',
+    height: height * 0.45, // 45% da tela (ajuste conforme preferir)
+    alignSelf: 'center',
+    overflow: 'hidden',
   },
   imageBackground: {
     width: '100%',
-    height: '85%',
+    height: '100%',
+    justifyContent: 'flex-end', // empurra indicadores para a base
   },
   overlay: {
     position: 'absolute',
-    width: '100%',
-    height: '100%',
+    top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'black',
-    opacity: 0.4,
+    opacity: 0.35,
   },
-
-indicatorsContainer: {
-  flexDirection: 'row',
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginTop: 12,
-  
-},
-indicator: {
-  width: 12,
-  height: 12,
-  borderRadius: 6,
-  marginHorizontal: 6,
-},
-
+  indicatorsWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+    // opcional: um leve blur/gradiente, aqui mantemos transparente
+  },
+  indicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 10,
+    marginHorizontal: 6,
+  },
 });
