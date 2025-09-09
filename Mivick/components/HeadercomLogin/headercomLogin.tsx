@@ -50,7 +50,7 @@ export function HeaderComLogin() {
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                router.push('/'); // ✅ rota contatos
+                router.push('/contato'); // ✅ rota contatos
               }}
             >
               <Text style={styles.menuText}>Contatos</Text>

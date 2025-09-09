@@ -62,7 +62,7 @@ export default function HomeScreen() {
           <Text style={styles.cardTextSmall}>
             Cadastre um contato para vê-lo aqui.
           </Text>
-          <FirstButton title="Cadastrar contato"  onPress={() => router.push('/home1')} />
+          <FirstButton title="Cadastrar contato"  onPress={() => router.push('/cadastrarContato')} />
         </FirstCard>
 
                 <View
