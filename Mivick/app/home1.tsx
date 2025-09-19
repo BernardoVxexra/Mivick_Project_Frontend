@@ -7,8 +7,8 @@ import { FirstSubTitle } from '../components/FirstSubTitle';
 import { FirstButton } from '../components/FirstButton';
 import { styles } from './styleHome1';
 import { FirstCarrousel } from '../components/FirstCarrousel/FirstCarrousel';
-import { HeaderComLogin } from '../components/HeaderComLogin'; // 🔥 import do header
 import { FontAwesome } from '@expo/vector-icons';
+import { HeaderComLogin } from '@/components/HeaderComLogin/HeaderComLogin';
 
 
 const carouselImages = [
