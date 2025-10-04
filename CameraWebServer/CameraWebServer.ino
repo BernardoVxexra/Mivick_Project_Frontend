@@ -5,8 +5,8 @@
 // ===========================
 // Credenciais WiFi
 // ===========================
-const char *ssid = "C7";
-const char *password = "123444444";
+const char *ssid = "Uai Fai";
+const char *password = "Rhema@1103";
 
 // ===========================
 // Web server
