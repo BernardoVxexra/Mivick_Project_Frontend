@@ -40,8 +40,11 @@ export default function HomeScreen() {
           <Text style={styles.cardText}>
             Para conectar, clique no botão abaixo e siga o passo a passo que irá aparecer.
           </Text>
-          <FirstButton title="Conectar dispositivo" />
-        </FirstCard>
+          <FirstButton
+            title="Conectar dispositivo"
+            onPress={() => router.push('/ble-screen')} // 🔗 vai pra tela BLE 
+            />
+          </FirstCard>
 
                 <View
                     style={{
@@ -81,7 +84,8 @@ export default function HomeScreen() {
             {/* Histórico */}
         <FirstTitle text="Verifique seu histórico" />
         <FirstSubTitle text="Confira seu histórico de corridas, vias e ruas em que passou, zonas de perigo e etc." />
-          <FirstButton title="Histórico do dispositivo" />
+          <FirstButton title="Histórico do dispositivo" 
+          onPress={() => router.push('/historico')} />
         </FirstCard>
       </ScrollView>
     </View>

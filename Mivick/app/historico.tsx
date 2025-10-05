@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
-export default function Historico({ route }: any) {
-  const image = route?.params?.image ?? '';
+export default function Historico() {
+  const params = useLocalSearchParams();
+  const image = params.image as string ?? '';
 
   return (
     <View style={styles.container}>

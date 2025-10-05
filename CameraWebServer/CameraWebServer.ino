@@ -1,37 +1,94 @@
+#include <Wire.h>
+#include <Arduino.h>
+#include <NimBLEDevice.h>
+#include <MPU6050_light.h>
 #include "esp_camera.h"
-#include <WiFi.h>
 #include "board_config.h"  // Configura o modelo da câmera
 
-// ===========================
-// Credenciais WiFi
-// ===========================
-const char *ssid = "Uai Fai";
-const char *password = "Rhema@1103";
+// ================== CONFIGURAÇÃO MPU6050 ==================
+MPU6050 mpu(Wire);
+#define MPU_SDA 20
+#define MPU_SCL 21
+bool mpuActive = false;  // só liga com comando BLE
 
-// ===========================
-// Web server
-// ===========================
-#include <WebServer.h>
-WebServer server(80); // Porta 80 do servidor
+// ================== CONFIGURAÇÃO ULTRASSÔNICO ==================
+#define TRIG_PIN 3
+#define ECHO_PIN 19
 
-void setupLedFlash(); // função para configurar o LED flash
+// ================== CONFIGURAÇÃO BLE ==================
+#define SERVICE_UUID        "12345678-1234-1234-1234-123456789abc"
+#define CHARACTERISTIC_UUID "abcdefab-1234-1234-1234-abcdefabcdef"
 
-// ===========================
-// Função para capturar foto
-// ===========================
-void handlePhoto() {
+NimBLECharacteristic* pCharacteristic = nullptr;
+NimBLEServer* pServer = nullptr;
+
+bool deviceConnected = false;
+bool sensorActive = false;
+
+// ================== CALLBACKS DO BLE ==================
+class MyServerCallbacks : public NimBLEServerCallbacks {
+  void onConnect(NimBLEServer* pServer) override {
+    deviceConnected = true;
+    Serial.println("🔗 Cliente BLE conectado!");
+  }
+  void onDisconnect(NimBLEServer* pServer) override {
+    deviceConnected = false;
+    sensorActive = false;
+    mpuActive = false;
+    Serial.println("❌ Cliente BLE desconectado!");
+    NimBLEDevice::getAdvertising()->start();
+    Serial.println("🔄 Recomeçando advertising BLE...");
+  }
+};
+
+class MyCallbacks : public NimBLECharacteristicCallbacks {
+  void onWrite(NimBLECharacteristic* pCharacteristic) override {
+    std::string value = pCharacteristic->getValue();
+    Serial.print("📩 Recebido via BLE: ");
+    Serial.println(value.c_str());
+
+    if (value == "ON") {
+      sensorActive = true;
+      mpuActive = true;   // Ativa MPU
+      Serial.println("✅ Comando ON recebido -> Sensores ativados");
+    } else if (value == "OFF") {
+      sensorActive = false;
+      mpuActive = false;  // Desliga MPU
+      Serial.println("🛑 Comando OFF recebido -> Sensores desativados");
+    } else if (value == "STATUS") {
+      String status = "Ultrassonico: " + String(sensorActive ? "ON" : "OFF") +
+                      ", MPU: " + String(mpuActive ? "ON" : "OFF") +
+                      ", BLE: " + String(deviceConnected ? "Connected" : "Disconnected");
+      pCharacteristic->setValue(status.c_str());
+      pCharacteristic->notify();
+      Serial.println("📤 STATUS enviado via BLE");
+    } else {
+      Serial.println("⚠️ Comando desconhecido!");
+    }
+  }
+};
+
+void sendPhotoBLE() {
+  if (!deviceConnected) return;
+
   camera_fb_t *fb = esp_camera_fb_get();
-  if (!fb) {
-    server.send(500, "text/plain", "Falha ao capturar foto");
-    return;
+  if (!fb) return;
+
+  const size_t chunkSize = 200;
+  for (size_t i = 0; i < fb->len; i += chunkSize) {
+    size_t len = ((i + chunkSize) > fb->len) ? (fb->len - i) : chunkSize;
+    std::string chunk((char*)fb->buf + i, len);
+    pCharacteristic->setValue(chunk);
+    pCharacteristic->notify();
+    delay(10);
   }
 
-  // Criar string a partir do buffer (atenção: pode ser grande!)
-  String jpg((char*)fb->buf, fb->len);
-
-  server.send(200, "image/jpeg", jpg);
+  // Enviar pacote final indicando fim
+  pCharacteristic->setValue("END");
+  pCharacteristic->notify();
 
   esp_camera_fb_return(fb);
+  Serial.println("🖼️ Foto enviada via BLE!");
 }
 
 
@@ -104,38 +161,111 @@ void startCamera() {
 #endif
 }
 
-// ===========================
-// Setup
-// ===========================
+
+
+
+
+
+// ================== SETUP ==================
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
-  Serial.println();
-
-  WiFi.begin(ssid, password);
-  WiFi.setSleep(false);
-
-  Serial.print("Conectando ao WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nWiFi conectado!");
-  Serial.println(WiFi.localIP());
-
   startCamera();
+  Serial.println("🚀 Iniciando ESP32...");
 
-  // Rota para tirar foto
-  server.on("/photo", handlePhoto);
-  server.begin();
+  // Pinos do ultrassônico
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  Serial.println("📡 Pinos do ultrassônico configurados");
 
-  Serial.println("Camera pronta! Acesse http://<IP_DA_CAMERA>/photo para tirar uma foto");
+  // BLE
+  NimBLEDevice::init("ESP32-CAM-BLE");
+  pServer = NimBLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+  NimBLEService* pService = pServer->createService(SERVICE_UUID);
+  pCharacteristic = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID,
+                      NIMBLE_PROPERTY::READ |
+                      NIMBLE_PROPERTY::WRITE |
+                      NIMBLE_PROPERTY::NOTIFY
+                    );
+  pCharacteristic->setCallbacks(new MyCallbacks());
+  pService->start();
+  NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->start();
+
+  Serial.println("✅ BLE iniciado e aguardando conexão...");
 }
 
-// ===========================
-// Loop
-// ===========================
+// ================== LOOP ==================
 void loop() {
-  server.handleClient(); // responde às requisições HTTP
-  delay(10);
+  // ---- Sensor Ultrassônico ----
+  if (sensorActive) {
+    Serial.println("📡 Lendo ultrassônico...");
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+
+    long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+    float distance_cm = (duration == 0) ? -1 : (duration / 2.0) * 0.0343;
+
+    if (distance_cm < 0) {
+      Serial.println("🌌 Nenhum objeto detectado");
+    } else if (distance_cm > 100 && distance_cm <= 300) {
+      Serial.printf("⚠️ Objeto a %.2f cm -> se aproximando\n", distance_cm);
+    } else if (distance_cm <= 100 && distance_cm > 30) {
+      Serial.printf("🚨 Objeto a %.2f cm -> próximo\n", distance_cm);
+      sendPhotoBLE();
+      delay(500); // evita múltiplas fotos consecutivas
+      pCharacteristic->notify();
+    } else if (distance_cm <= 30) {
+      sendPhotoBLE();
+      delay(500); // evita múltiplas fotos consecutivas
+      pCharacteristic->notify();
+      Serial.printf("❗ Objeto a %.2f cm -> AO LADO\n", distance_cm);
+    }
+  }
+
+  // ---- MPU6050 ----
+ if (mpuActive) {
+  static bool mpuInit = false;
+  if (!mpuInit) {
+    Serial.println("⏳ Inicializando MPU6050...");
+    Wire.begin(MPU_SDA, MPU_SCL);
+    byte status = mpu.begin();
+    if (status != 0) {
+      Serial.print("❌ ERRO MPU6050: ");
+      Serial.println(status);
+    } else {
+      Serial.println("✅ MPU6050 iniciado com sucesso!");
+      mpu.calcOffsets(true, true); // calibra
+      mpuInit = true;
+    }
+  }
+
+  if (mpuInit) {
+    mpu.update();
+    Serial.printf("📊 Acelerômetro X: %.2f Y: %.2f Z: %.2f m/s²\n", mpu.getAccX(), mpu.getAccY(), mpu.getAccZ());
+    Serial.printf("📊 Giroscópio X: %.2f Y: %.2f Z: %.2f °/s\n", mpu.getGyroX(), mpu.getGyroY(), mpu.getGyroZ());
+
+    float accMagnitude = sqrt(
+      mpu.getAccX() * mpu.getAccX() +
+      mpu.getAccY() * mpu.getAccY() +
+      mpu.getAccZ() * mpu.getAccZ()
+    );
+
+    Serial.printf("📊 Magnitude aceleração: %.2f m/s²\n", accMagnitude);
+
+    if (accMagnitude > 15.0) {
+      Serial.println("💥 BATIDA DETECTADA!");
+      pCharacteristic->setValue("BATIDA");
+      pCharacteristic->notify();
+    }
+  }
+}
+
+  delay(200);
 }
