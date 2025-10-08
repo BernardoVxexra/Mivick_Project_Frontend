@@ -4,7 +4,15 @@
 #include <MPU6050_light.h>
 #include "esp_camera.h"
 #include "board_config.h"  // Configura o modelo da câmera
+#include <WiFi.h>
+#include <WebSocketsClient.h>
 
+const char* ssid = "Uai Fai";
+const char* password = "Rhema@1103";
+const char* websocket_server = "192.168.0.105";  // IP do celular
+const int websocket_port = 8080;
+
+WebSocketsClient webSocket;
 // ================== CONFIGURAÇÃO MPU6050 ==================
 MPU6050 mpu(Wire);
 #define MPU_SDA 20
@@ -68,6 +76,8 @@ class MyCallbacks : public NimBLECharacteristicCallbacks {
   }
 };
 
+
+/*
 void sendPhotoBLE() {
   if (!deviceConnected) return;
 
@@ -89,6 +99,35 @@ void sendPhotoBLE() {
 
   esp_camera_fb_return(fb);
   Serial.println("🖼️ Foto enviada via BLE!");
+}
+*/
+
+void sendPhotoWS() {
+  camera_fb_t *fb = esp_camera_fb_get();
+  if (!fb) {
+    Serial.println("❌ Falha ao capturar imagem");
+    return;
+  }
+
+  String base64Image = "";
+  unsigned char *buf = fb->buf;
+  size_t len = fb->len;
+  const char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+  for (size_t i = 0; i < len; i += 3) {
+    unsigned char b1 = buf[i];
+    unsigned char b2 = (i + 1 < len) ? buf[i + 1] : 0;
+    unsigned char b3 = (i + 2 < len) ? buf[i + 2] : 0;
+
+    base64Image += base64_chars[(b1 >> 2) & 0x3F];
+    base64Image += base64_chars[((b1 & 0x3) << 4) | ((b2 >> 4) & 0xF)];
+    base64Image += (i + 1 < len) ? base64_chars[((b2 & 0xF) << 2) | ((b3 >> 6) & 0x3)] : '=';
+    base64Image += (i + 2 < len) ? base64_chars[b3 & 0x3F] : '=';
+  }
+
+  webSocket.sendTXT(base64Image);
+  esp_camera_fb_return(fb);
+  Serial.println("✅ Foto enviada via WebSocket");
 }
 
 
@@ -173,6 +212,25 @@ void setup() {
   startCamera();
   Serial.println("🚀 Iniciando ESP32...");
 
+ WiFi.begin(ssid, password);
+  Serial.print("Conectando Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println("\n✅ Wi-Fi conectado!");
+  Serial.println(WiFi.localIP());
+
+  webSocket.begin(websocket_server, websocket_port, "/");
+  webSocket.onEvent([](WStype_t type, uint8_t *payload, size_t length) {
+    if (type == WStype_CONNECTED) {
+      Serial.println("🔗 Conectado ao app via WebSocket!");
+    } else if (type == WStype_DISCONNECTED) {
+      Serial.println("❌ Desconectado do WebSocket");
+    }
+  });
+
+
   // Pinos do ultrassônico
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
@@ -200,6 +258,7 @@ void setup() {
 
 // ================== LOOP ==================
 void loop() {
+  webSocket.loop();
   // ---- Sensor Ultrassônico ----
   if (sensorActive) {
     Serial.println("📡 Lendo ultrassônico...");
@@ -214,15 +273,18 @@ void loop() {
 
     if (distance_cm < 0) {
       Serial.println("🌌 Nenhum objeto detectado");
+    
     } else if (distance_cm > 100 && distance_cm <= 300) {
-      Serial.printf("⚠️ Objeto a %.2f cm -> se aproximando\n", distance_cm);
+      Serial.printf("⚠️ Objeto a %.2f cm -> se aproximando\n", distance_cm); 
+    
     } else if (distance_cm <= 100 && distance_cm > 30) {
       Serial.printf("🚨 Objeto a %.2f cm -> próximo\n", distance_cm);
-      sendPhotoBLE();
+      sendPhotoWiFi();
       delay(500); // evita múltiplas fotos consecutivas
       pCharacteristic->notify();
+  
     } else if (distance_cm <= 30) {
-      sendPhotoBLE();
+      sendPhotoWiFi();
       delay(500); // evita múltiplas fotos consecutivas
       pCharacteristic->notify();
       Serial.printf("❗ Objeto a %.2f cm -> AO LADO\n", distance_cm);
@@ -266,6 +328,6 @@ void loop() {
     }
   }
 }
-
+  server.handleClient(); // responde às requisições HTTP
   delay(200);
 }

@@ -4,6 +4,7 @@ import { BleManager, Device, Characteristic } from 'react-native-ble-plx';
 import { Buffer } from 'buffer';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import { WebSocketServer } from "react-native-websocket-server";
 const SERVICE_UUID = '12345678-1234-1234-1234-123456789abc';
 const CHARACTERISTIC_UUID = 'abcdefab-1234-1234-1234-abcdefabcdef';
 const DEVICE_NAME = 'ESP32-CAM-BLE';
@@ -73,6 +74,7 @@ const router = useRouter();
     if (!characteristic?.value) return;
 
     const msg = Buffer.from(characteristic.value, 'base64').toString('utf-8');
+    /*
     if (msg === 'END') {
       const totalLength = bufferFoto.current.reduce((sum, arr) => sum + arr.length, 0);
       const combined = new Uint8Array(totalLength);
@@ -91,9 +93,37 @@ const router = useRouter();
       });
     } else {
       bufferFoto.current.push(Buffer.from(characteristic.value, 'base64'));
-    }
+    }*/
   }
 );
+
+
+  useEffect(() => {
+    const wss = new WebSocketServer({ port: 8080 });
+    console.log("🌐 Servidor WebSocket rodando na porta 8080");
+
+    wss.onconnection((socket: any) => {
+      console.log("📡 ESP32 conectado via WebSocket");
+
+      socket.onmessage = (message: any) => {
+        console.log("🖼️ Foto recebida do ESP32");
+        const base64Image = message.data; // já vem como base64 JPEG
+        router.push({
+          pathname: "/historico",
+          params: { image: `data:image/jpeg;base64,${base64Image}?t=${Date.now()}` },
+        });
+      };
+
+      socket.onclose = () => {
+        console.log("❌ Conexão encerrada");
+      };
+    });
+
+    return () => {
+      wss.close();
+    };
+  }, []);
+
 
     } catch (e) {
       console.error('❌ Erro ao conectar:', e);
