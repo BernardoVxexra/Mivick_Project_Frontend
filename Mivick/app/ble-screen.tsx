@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Button, Text, PermissionsAndroid, Platform, Alert } from 'react-native';
-import { BleManager, Device, Characteristic } from 'react-native-ble-plx';
+import { View, Button, Text, Alert, Image, ScrollView } from 'react-native';
+import { BleManager, Device } from 'react-native-ble-plx';
 import { Buffer } from 'buffer';
-import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { WebSocketServer } from "react-native-websocket-server";
+
 const SERVICE_UUID = '12345678-1234-1234-1234-123456789abc';
 const CHARACTERISTIC_UUID = 'abcdefab-1234-1234-1234-abcdefabcdef';
 const DEVICE_NAME = 'ESP32-CAM-BLE';
+const ESP32_WS_IP = 'ws://192.168.1.10:80/ws'; // IP do ESP32
 
 global.Buffer = global.Buffer || Buffer;
 
@@ -15,42 +15,20 @@ export default function BleScreen() {
   const [manager] = useState(() => new BleManager());
   const [device, setDevice] = useState<Device | null>(null);
   const [connected, setConnected] = useState(false);
-  const [eventoPendentes, setEventoPendentes] = useState({ batida: false, foto: false });
-  const navigation = useNavigation<any>();
-  const subscriptionRef = useRef<any>(null);
-   const bufferFoto = useRef<Uint8Array[]>([]);
-const router = useRouter();
-
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     startScan();
-    // ❌ NÃO desconecta mais automaticamente
   }, []);
 
-  async function requestPermissions(): Promise<boolean> {
-    if (Platform.OS !== 'android') return true;
-    if (Platform.Version >= 31) {
-      const perms = [
-        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      ];
-      const result = await PermissionsAndroid.requestMultiple(perms as any);
-      return Object.values(result).every(v => v === PermissionsAndroid.RESULTS.GRANTED);
-    } else {
-      const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    }
-  }
-
+  // ================= BLE =================
   async function startScan() {
-    const ok = await requestPermissions();
-    if (!ok) return;
-
     manager.startDeviceScan(null, null, (error, scannedDevice) => {
       if (error) return console.error('❌ Scan error', error);
       if (scannedDevice?.name === DEVICE_NAME) {
-        console.log("📡 Encontrado:", scannedDevice.name);
+        console.log('📡 Encontrado:', scannedDevice.name);
         manager.stopDeviceScan();
         connectToDevice(scannedDevice);
       }
@@ -64,105 +42,10 @@ const router = useRouter();
       setDevice(connectedDevice);
       setConnected(true);
       console.log('✅ Conectado a', connectedDevice.name);
-
-      // Mantém conexão ativa
- subscriptionRef.current = connectedDevice.monitorCharacteristicForService(
-  SERVICE_UUID,
-  CHARACTERISTIC_UUID,
-  async (error, characteristic) => {
-    if (error) return console.error(error);
-    if (!characteristic?.value) return;
-
-    const msg = Buffer.from(characteristic.value, 'base64').toString('utf-8');
-    /*
-    if (msg === 'END') {
-      const totalLength = bufferFoto.current.reduce((sum, arr) => sum + arr.length, 0);
-      const combined = new Uint8Array(totalLength);
-      let offset = 0;
-      bufferFoto.current.forEach(arr => {
-        combined.set(arr, offset);
-        offset += arr.length;
-      });
-
-      const base64Image = Buffer.from(combined).toString('base64');
-      bufferFoto.current = [];
-
-      router.push({
-        pathname: '/historico',
-        params: { image: `data:image/jpeg;base64,${base64Image}?t=${Date.now()}` },
-      });
-    } else {
-      bufferFoto.current.push(Buffer.from(characteristic.value, 'base64'));
-    }*/
-  }
-);
-
-
-  useEffect(() => {
-    const wss = new WebSocketServer({ port: 8080 });
-    console.log("🌐 Servidor WebSocket rodando na porta 8080");
-
-    wss.onconnection((socket: any) => {
-      console.log("📡 ESP32 conectado via WebSocket");
-
-      socket.onmessage = (message: any) => {
-        console.log("🖼️ Foto recebida do ESP32");
-        const base64Image = message.data; // já vem como base64 JPEG
-        router.push({
-          pathname: "/historico",
-          params: { image: `data:image/jpeg;base64,${base64Image}?t=${Date.now()}` },
-        });
-      };
-
-      socket.onclose = () => {
-        console.log("❌ Conexão encerrada");
-      };
-    });
-
-    return () => {
-      wss.close();
-    };
-  }, []);
-
-
     } catch (e) {
-      console.error('❌ Erro ao conectar:', e);
-      Alert.alert('Erro', 'Falha ao conectar ao dispositivo.');
+      console.error('❌ Erro ao conectar BLE:', e);
+      Alert.alert('Erro', 'Falha ao conectar ao dispositivo BLE.');
     }
-  }
-
-  async function desconectar() {
-    try {
-      if (subscriptionRef.current) subscriptionRef.current.remove();
-      if (device) await device.cancelConnection();
-      setConnected(false);
-      setDevice(null);
-      Alert.alert('BLE', 'Desconectado com sucesso.');
-    } catch (err) {
-      console.error('❌ Erro ao desconectar:', err);
-    }
-  }
-
-  /*async function pegarFotoDaCamera() {
-    try {
-      const res = await fetch(`http://${CAMERA_IP}/photo`);
-      const blob = await res.blob();
-      const base64Image = await blobToBase64(blob);
-      console.log("🖼️ Foto recebida, tamanho base64:", base64Image.length);
-      navigation.navigate('historico', { image: `data:image/jpeg;base64,${base64Image}` });
-    } catch (err) {
-      console.error("❌ Erro ao buscar foto:", err);
-      Alert.alert('Erro', 'Falha ao capturar foto da câmera.');
-    }
-  }
-*/
-  function blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   }
 
   async function enviarComando(cmd: string) {
@@ -180,17 +63,46 @@ const router = useRouter();
     }
   }
 
+  // ================= WebSocket =================
+  useEffect(() => {
+    const socket = new WebSocket(ESP32_WS_IP);
+
+    socket.onopen = () => {
+      console.log('🌐 Conectado ao ESP32 via WebSocket!');
+    };
+
+    socket.onmessage = (event) => {
+      console.log('🖼️ Dados recebidos via WebSocket');
+      const base64Image = event.data as string; // ESP32 envia JPEG em base64
+      setImages((prev) => [...prev, `data:image/jpeg;base64,${base64Image}?t=${Date.now()}`]);
+    };
+
+    socket.onclose = () => console.log('❌ Conexão WebSocket encerrada');
+    socket.onerror = (err) => console.error('❌ WebSocket erro:', err);
+
+    setWs(socket);
+
+    return () => {
+      socket.close();
+    };
+  }, []);
+
   return (
-    <View style={{ padding: 20 }}>
-      <Text>Conectado: {connected && device ? device.name : 'Não'}</Text>
+    <ScrollView style={{ padding: 20 }}>
+      <Text>Conectado BLE: {connected && device ? device.name : 'Não'}</Text>
       <View style={{ height: 12 }} />
       <Button title="Ligar sensores" onPress={() => enviarComando('ON')} />
       <View style={{ height: 8 }} />
       <Button title="Desligar sensores" onPress={() => enviarComando('OFF')} />
-      <View style={{ height: 8 }} />
-      {connected && (
-        <Button title="Desconectar" color="red" onPress={desconectar} />
-      )}
-    </View>
+      <View style={{ height: 12 }} />
+      <Text>Fotos recebidas:</Text>
+      {images.map((img, idx) => (
+        <Image
+          key={idx}
+          source={{ uri: img }}
+          style={{ width: 300, height: 200, marginVertical: 8 }}
+        />
+      ))}
+    </ScrollView>
   );
 }
