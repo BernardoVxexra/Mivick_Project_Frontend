@@ -8,6 +8,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoWebsockets.h>
+#include "base64.h"
 
 using namespace websockets;
 
@@ -83,9 +84,12 @@ void sendPhotoWS() {
     return;
   }
 
-  ws.binaryAll(fb->buf, fb->len);
+  //ws.binaryAll(fb->buf, fb->len);
+  String imageBase64 = base64::encode(fb->buf, fb->len);
+  ws.textAll(imageBase64);
   esp_camera_fb_return(fb);
   Serial.println("✅ Foto enviada via WebSocket");
+  Serial.printf("📷 Tamanho da imagem: %d bytes\n", fb->len);
 }
 
 // ================= CAMÊRA =================
@@ -122,7 +126,8 @@ void startCamera() {
     config.fb_count = 2;
     config.grab_mode = CAMERA_GRAB_LATEST;
   } else {
-    config.frame_size = FRAMESIZE_SVGA;
+    config.frame_size = FRAMESIZE_VGA;   // 640x480
+config.jpeg_quality = 10;
     config.fb_location = CAMERA_FB_IN_DRAM;
   }
 
